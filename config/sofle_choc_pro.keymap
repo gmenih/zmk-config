@@ -27,6 +27,11 @@
             bindings = <&kp LG(SPACE)>;
             key-positions = <54 42>;
         };
+
+        macossleep {
+            bindings = <&kp LC(LG(Q))>;
+            key-positions = <54 0>;
+        };
     };
 
     keymap {
