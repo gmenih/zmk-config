@@ -26,11 +26,13 @@
         raycast {
             bindings = <&kp LG(SPACE)>;
             key-positions = <54 42>;
+            timeout-ms = <200>;
         };
 
         macossleep {
             bindings = <&kp LC(LG(Q))>;
             key-positions = <54 0>;
+            timeout-ms = <200>;
         };
     };
 
