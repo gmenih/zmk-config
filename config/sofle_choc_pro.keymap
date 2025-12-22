@@ -92,7 +92,7 @@
 &trans      &kp INS       &kp PSCRN     &kp K_CMENU   &trans        &trans          &kp PG_UP                             &trans          &trans  &trans     &trans  &trans
 &trans      &kp LALT      &kp LCTRL     &kp LSHFT     &trans        &kp CLCK        &kp PG_DN                             &trans          &trans  &trans     &trans  &trans
 &trans      &kp K_UNDO    &kp K_CUT     &kp K_COPY    &kp K_PASTE   &studio_unlock  &trans     &kp LS(LG(SPACE))  &trans  &trans          &trans  &trans     &trans  &trans
-                          &sys_reset    &trans        &trans        &trans          &trans     &trans             &trans  &kp LEFT_ARROW  &trans  &kp RIGHT
+                          &bootloader   &trans        &trans        &trans          &trans     &trans             &trans  &kp LEFT_ARROW  &trans  &kp RIGHT
             >;
         };
 
