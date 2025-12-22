@@ -54,12 +54,16 @@ fi
 cd /workspace
 
 # Initialize workspace if needed
-if [ ! -d ".west" ] || [ ! -d "zmk" ] || [ ! -d "zephyr" ]; then
+if [ ! -d ".west" ] || [ ! -d "zmk" ] || [ ! -f "zephyr/CMakeLists.txt" ]; then
   echo ""
   echo "Initializing West workspace (first run)..."
+  # Backup module.yml if it exists (needed for GitHub, not local)
+  [ -f "zephyr/module.yml" ] && cp zephyr/module.yml /tmp/module.yml.bak
   rm -rf .west zmk zephyr modules
   west init -l config
   west update
+  # Restore module.yml for consistency
+  [ -f "/tmp/module.yml.bak" ] && cp /tmp/module.yml.bak zephyr/module.yml
   echo "Workspace initialized."
 fi
 
@@ -71,7 +75,7 @@ OUTPUT_DIR="/workspace/firmware"
 
 mkdir -p "${OUTPUT_DIR}"
 
-BUILD_CMD="west build -s zmk/app -p -b ${BOARD} -d ${BUILD_DIR} -- -DBOARD_ROOT=/workspace"
+BUILD_CMD="west build -s zmk/app -p -b ${BOARD} -d ${BUILD_DIR} -- -DBOARD_ROOT=/workspace -DZMK_CONFIG=/workspace/config"
 
 if [ -n "${SHIELD}" ]; then
   BUILD_CMD="${BUILD_CMD} -DSHIELD=${SHIELD}"
