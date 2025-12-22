@@ -1,0 +1,6 @@
+.git
+.github
+*.uf2
+firmware/
+build/
+.DS_Store
