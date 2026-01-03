@@ -23,9 +23,6 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 #include "peripheral_status.h"
 
-LV_IMG_DECLARE(balloon);
-LV_IMG_DECLARE(mountain);
-
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
 struct peripheral_status_state {
@@ -36,19 +33,75 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
     lv_obj_t *canvas = lv_obj_get_child(widget, 0);
 
     lv_draw_label_dsc_t label_dsc;
-    init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_16, LV_TEXT_ALIGN_RIGHT);
+    init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_montserrat_16, LV_TEXT_ALIGN_LEFT);
+    lv_draw_label_dsc_t label_dsc_right;
+    init_label_dsc(&label_dsc_right, LVGL_FOREGROUND, &lv_font_montserrat_16, LV_TEXT_ALIGN_RIGHT);
     lv_draw_rect_dsc_t rect_black_dsc;
     init_rect_dsc(&rect_black_dsc, LVGL_BACKGROUND);
 
     // Fill background
     lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
 
-    // Draw battery
-    draw_battery(canvas, state);
+    // Draw battery percentage
+    char battery_text[12] = {};
+    snprintf(battery_text, sizeof(battery_text), "%d%%", state->battery);
+    lv_canvas_draw_text(canvas, 0, 0, 44, &label_dsc, battery_text);
 
-    // Draw output status
-    lv_canvas_draw_text(canvas, 0, 0, CANVAS_SIZE, &label_dsc,
-                        state->connected ? LV_SYMBOL_WIFI : LV_SYMBOL_CLOSE);
+    // Draw connection status on the right
+    // Blink effect when not connected
+    char status_text[10] = {};
+    bool show_icon = true;
+
+    if (!state->connected) {
+        show_icon = (k_uptime_get() / 500) % 2 == 0;
+    }
+
+    if (show_icon) {
+        snprintf(status_text, sizeof(status_text), state->connected ? LV_SYMBOL_BLUETOOTH : LV_SYMBOL_CLOSE);
+    }
+
+    lv_canvas_draw_text(canvas, 0, 0, CANVAS_SIZE, &label_dsc_right, status_text);
+
+    // Rotate canvas
+    rotate_canvas(canvas, cbuf);
+}
+
+static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status_state *state) {
+    lv_obj_t *canvas = lv_obj_get_child(widget, 1);
+
+    lv_draw_rect_dsc_t rect_black_dsc;
+    init_rect_dsc(&rect_black_dsc, LVGL_BACKGROUND);
+    lv_draw_rect_dsc_t rect_white_dsc;
+    init_rect_dsc(&rect_white_dsc, LVGL_FOREGROUND);
+
+    // Fill background
+    lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
+
+    // Draw frame border (68x68)
+    lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, 1, &rect_white_dsc);
+    lv_canvas_draw_rect(canvas, 0, CANVAS_SIZE - 1, CANVAS_SIZE, 1, &rect_white_dsc);
+    lv_canvas_draw_rect(canvas, 0, 0, 1, CANVAS_SIZE, &rect_white_dsc);
+    lv_canvas_draw_rect(canvas, CANVAS_SIZE - 1, 0, 1, CANVAS_SIZE, &rect_white_dsc);
+
+    // Rotate canvas
+    rotate_canvas(canvas, cbuf);
+}
+
+static void draw_bottom(lv_obj_t *widget, lv_color_t cbuf[], const struct status_state *state) {
+    lv_obj_t *canvas = lv_obj_get_child(widget, 2);
+
+    lv_draw_rect_dsc_t rect_black_dsc;
+    init_rect_dsc(&rect_black_dsc, LVGL_BACKGROUND);
+    lv_draw_label_dsc_t label_dsc_left;
+    init_label_dsc(&label_dsc_left, LVGL_FOREGROUND, &lv_font_montserrat_16, LV_TEXT_ALIGN_LEFT);
+
+    // Fill background
+    lv_canvas_draw_rect(canvas, 0, 0, CANVAS_SIZE, CANVAS_SIZE, &rect_black_dsc);
+
+    // Draw charging icon on the left when charging
+    if (state->charging) {
+        lv_canvas_draw_text(canvas, 0, 5, 68, &label_dsc_left, LV_SYMBOL_CHARGE);
+    }
 
     // Rotate canvas
     rotate_canvas(canvas, cbuf);
@@ -63,6 +116,7 @@ static void set_battery_status(struct zmk_widget_status *widget,
     widget->state.battery = state.level;
 
     draw_top(widget->obj, widget->cbuf, &widget->state);
+    draw_bottom(widget->obj, widget->cbuf3, &widget->state);
 }
 
 static void battery_status_update_cb(struct battery_status_state state) {
@@ -108,28 +162,35 @@ ZMK_DISPLAY_WIDGET_LISTENER(widget_peripheral_status, struct peripheral_status_s
 ZMK_SUBSCRIPTION(widget_peripheral_status, zmk_split_peripheral_status_changed);
 
 #ifdef CONFIG_NICE_VIEW_DISP_ROTATE_180 // sets positions for default and flipped canvases
-int art_pos = 20;
-int top_pos = 0;
+int top_pos_p = 0;
+int middle_pos_p = 46;
+int bottom_pos_p = 136;
 #else
-int art_pos = 0;
-int top_pos = 92;
+int top_pos_p = 136;
+int middle_pos_p = 46;
+int bottom_pos_p = -44;
 #endif
 
 int zmk_widget_status_init(struct zmk_widget_status *widget, lv_obj_t *parent) {
     widget->obj = lv_obj_create(parent);
     lv_obj_set_size(widget->obj, 160, 68);
     lv_obj_t *top = lv_canvas_create(widget->obj);
-    lv_obj_align(top, LV_ALIGN_TOP_LEFT, top_pos, 0);
+    lv_obj_align(top, LV_ALIGN_TOP_LEFT, top_pos_p, 0);
     lv_canvas_set_buffer(top, widget->cbuf, CANVAS_SIZE, CANVAS_SIZE, LV_IMG_CF_TRUE_COLOR);
-
-    lv_obj_t *art = lv_img_create(widget->obj);
-    bool random = sys_rand32_get() & 1;
-    lv_img_set_src(art, random ? &balloon : &mountain);
-    lv_obj_align(art, LV_ALIGN_TOP_LEFT, art_pos, 0);
+    lv_obj_t *middle = lv_canvas_create(widget->obj);
+    lv_obj_align(middle, LV_ALIGN_TOP_LEFT, middle_pos_p, 0);
+    lv_canvas_set_buffer(middle, widget->cbuf2, CANVAS_SIZE, CANVAS_SIZE, LV_IMG_CF_TRUE_COLOR);
+    lv_obj_t *bottom = lv_canvas_create(widget->obj);
+    lv_obj_align(bottom, LV_ALIGN_TOP_LEFT, bottom_pos_p, 0);
+    lv_canvas_set_buffer(bottom, widget->cbuf3, CANVAS_SIZE, CANVAS_SIZE, LV_IMG_CF_TRUE_COLOR);
 
     sys_slist_append(&widgets, &widget->node);
     widget_battery_status_init();
     widget_peripheral_status_init();
+
+    // Initial draw of middle frame and bottom
+    draw_middle(widget->obj, widget->cbuf2, &widget->state);
+    draw_bottom(widget->obj, widget->cbuf3, &widget->state);
 
     return 0;
 }
