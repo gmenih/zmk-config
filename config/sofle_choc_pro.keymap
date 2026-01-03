@@ -26,13 +26,15 @@
         raycast {
             bindings = <&kp LG(SPACE)>;
             key-positions = <54 42>;
-            timeout-ms = <200>;
+            timeout-ms = <500>;
+            require-prior-idle-ms = <500>;
         };
 
         macossleep {
             bindings = <&kp LC(LG(Q))>;
             key-positions = <54 0>;
-            timeout-ms = <200>;
+            timeout-ms = <500>;
+            require-prior-idle-ms = <500>;
         };
     };
 
@@ -40,7 +42,7 @@
         compatible = "zmk,keymap";
 
         default_layer {
-            display-name = "default";
+            display-name = "\xEF\x80\x95";
 
             // ------------------------------------------------------------------------------------------------------------
             // |   `   |  1  |  2  |  3   |  4   |  5   |                   |  6   |  7    |  8    |  9   |   0   |   `   |
@@ -59,7 +61,7 @@
         };
 
         lower_layer {
-            display-name = "lower";
+            display-name = "\xEF\x81\xAE";
 
             // ------------------------------------------------------------------------------------------------------------
             // |       |  F1 |  F2 |  F3  |  F4  |  F5  |                   |  F6  |  F7   |  F8   |  F9  |  F10  |  F11  |
@@ -78,7 +80,7 @@
         };
 
         raise_layer {
-            display-name = "raise";
+            display-name = "\xEF\x81\xB7";
 
             // ------------------------------------------------------------------------------------------------------------
             // | BTCLR | BT1  | BT2  |  BT3  |  BT4  |  BT5 |                |      |      |       |      |       |       |
@@ -104,7 +106,7 @@
             // |        |         |         |         |         |         | RGB_TOG | |      |      |      |       |      |       |       |
             //                    |         |         |         |         |         | |      |      |      |       |      |
 
-            display-name = "adjust";
+            display-name = "\xEF\x80\x93";
             bindings = <
 &rgb_ug RGB_TOG    &bt BT_SEL 0     &bt BT_SEL 1     &bt BT_SEL 2     &bt BT_SEL 3     &bt BT_SEL 4                                   &none  &none  &none  &none  &none  &none
 &ext_power EP_TOG  &rgb_ug RGB_HUD  &rgb_ug RGB_HUI  &rgb_ug RGB_SAD  &rgb_ug RGB_SAI  &rgb_ug RGB_EFF  &none                                &none  &none  &none  &none  &none
